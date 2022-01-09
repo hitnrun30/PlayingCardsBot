@@ -43,7 +43,7 @@ func (c Card) NumberAsString() string {
 	switch c.number {
 	case 1:
 		return "Ace"
-	case 2, 3, 4, 5, 6, 7, 8, 9, 10:
+	case 2:
 		return strconv.Itoa(c.number)
 	case 11:
 		return "Jack"

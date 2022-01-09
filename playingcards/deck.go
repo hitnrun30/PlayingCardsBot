@@ -7,31 +7,17 @@ import (
 // EmptyCard is a fake card to return on invalid function calls that return a playing card
 var EmptyCard Card = NewCard(-1, CLUBS)
 
-// Deck is a standard 52-card list of playing cards
+// Deck is a standard Deck of many things
 type Deck struct {
 	cards []Card
 }
 
-// NewDeckWithoutJokers creates a new deck of cards with no Joker cards
-func NewDeckWithoutJokers() Deck {
-	deck := make([]Card, 52)
-	i := 0
-	for suit := CLUBS; suit <= SPADES; suit++ {
-		for n := 1; n <= 13; n++ {
-			card := NewCard(n, suit)
-			deck[i] = card
-			i++
-		}
-	}
-	return Deck{cards: deck}
-}
-
 // NewDeckWithJokers creates a new deck of cards with a red and black Joker included
-func NewDeckWithJokers() Deck {
-	deck := make([]Card, 54)
+func NewDeckofMany() Deck {
+	deck := make([]Card, 22)
 	i := 0
 	for suit := CLUBS; suit <= SPADES; suit++ {
-		for n := 1; n <= 13; n++ {
+		for n := 1; n <= 5; n++ {
 			card := NewCard(n, suit)
 			deck[i] = card
 			i++
@@ -46,12 +32,8 @@ func NewDeckWithJokers() Deck {
 }
 
 // NewDeck creates a new deck of cards
-func NewDeck(includeJokers bool) Deck {
-	if includeJokers {
-		return NewDeckWithJokers()
-	} else {
-		return NewDeckWithoutJokers()
-	}
+func NewDeck() Deck {
+	return NewDeckofMany()
 }
 
 // Size returns the number of cards remaining in this deck

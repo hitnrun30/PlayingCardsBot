@@ -72,12 +72,10 @@ type GameState struct {
 
 // ServerState holds data on the current state of a Discord server
 type ServerState struct {
-	id            string
-	deck          playingcards.Deck
-	game          GameState
-	players       map[string]*PlayerState
-	cardsStyle    int
-	includeJokers bool
+	id      string
+	deck    playingcards.Deck
+	game    GameState
+	players map[string]*PlayerState
 }
 
 // Constants that represent what card images to use
@@ -88,11 +86,11 @@ const (
 
 var serverStates = make(map[string]*ServerState)
 
-var prefix string = "$pcb "
+var prefix string = "$domt "
 
 // NewServerState creates a new state struct for the given Discord server
 func NewServerState(guildID string) *ServerState {
-	ss := ServerState{id: guildID, players: make(map[string]*PlayerState), cardsStyle: KenneyLarge, includeJokers: false}
+	ss := ServerState{id: guildID, players: make(map[string]*PlayerState)}
 	return &ss
 }
 
@@ -159,36 +157,27 @@ func GetServerState(guildID string) *ServerState {
 		state = NewServerState(guildID)
 		serverStates[guildID] = state
 		// Initialize the server's deck of cards
-		state.deck = playingcards.NewDeck(state.includeJokers)
+		state.deck = playingcards.NewDeck()
 	}
 	return state
 }
 
 // GetCardPath is specific to how the card images are named
-func GetCardPath(card playingcards.Card, style int) string {
+func GetCardPath(card playingcards.Card) string {
 	suit := strings.ToLower(card.Suit().String())
 	valueString := ""
 	path := ""
 
 	if card.NumberAsString() == "Joker" {
-		if style == KenneyLarge {
-			path = fmt.Sprintf("card_images/kenney_cards_large/cardJoker%s.png", card.Color())
-		} else if style == KenneyPixel {
-			path = fmt.Sprintf("card_images/kenney_cards_pixel/card_joker_%s.png", strings.ToLower(card.Color()))
-		}
+		path = fmt.Sprintf("card_images/cardJoker%s.png", card.Color())
 		return path
 	}
 
 	switch card.Value() {
 	case 1:
 		valueString = "A"
-	case 2, 3, 4, 5, 6, 7, 8, 9, 10:
-		if style == KenneyPixel {
-			// Kenney's pixel cards are 0-padded
-			valueString = fmt.Sprintf("%02d", card.Value())
-		} else if style == KenneyLarge {
-			valueString = fmt.Sprintf("%d", card.Value())
-		}
+	case 2:
+		valueString = fmt.Sprintf("%d", card.Value())
 
 	case 11:
 		valueString = "J"
@@ -199,20 +188,14 @@ func GetCardPath(card playingcards.Card, style int) string {
 	default:
 		return ""
 	}
-	if style == KenneyLarge {
-		// Kenney's normal cards are of the format "card<Suit>XX" in camelCase
-		path = fmt.Sprintf("card_images/kenney_cards_large/card%s%s.png", strings.ToUpper(suit[0:1])+suit[1:], valueString)
-	} else if style == KenneyPixel {
-		// Kenney's pixel cards are of the format "card_<suit>_XX"
-		path = fmt.Sprintf("card_images/kenney_cards_pixel/card_%s_%s.png", suit, valueString)
-	}
+	path = fmt.Sprintf("card_images/card%s%s.png", strings.ToUpper(suit[0:1])+suit[1:], valueString)
 
 	return path
 }
 
 // GetCardURL returns the full url to the image for the given card
-func GetCardURL(card playingcards.Card, style int) string {
-	cardPath := GetCardPath(card, style)
+func GetCardURL(card playingcards.Card) string {
+	cardPath := GetCardPath(card)
 	// URL of the server hosting the images
 	hostURL := os.Getenv("HOST_URL")
 	if len(hostURL) == 0 {
@@ -235,17 +218,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if command == "info" {
 		var infoString strings.Builder
-		infoString.WriteString("This bot allows users to play with a standard 52-card deck of playing cards.\n\n")
+		infoString.WriteString("This bot allows users to use the Deck of Many Things, be careful.\n\n")
 		infoString.WriteString(fmt.Sprintf("**%sdraw**: Draw a card from the current deck.\n", prefix))
 		infoString.WriteString(fmt.Sprintf("**%sshuffle**: Shuffle the current deck of cards.\n", prefix))
-		infoString.WriteString(fmt.Sprintf("**%sreset_cards**: Make a brand new, ordered deck of 52 cards.\n", prefix))
-		infoString.WriteString(fmt.Sprintf("**%sset_style_normal**: Change the style of the cards to normal.\n", prefix))
-		infoString.WriteString(fmt.Sprintf("**%sset_style_pixel**: Change the style of the cards to pixel art.\n", prefix))
-		infoString.WriteString(fmt.Sprintf("**%sinclude_jokers**: Add the red and black Joker cards to the deck.\n", prefix))
-		infoString.WriteString(fmt.Sprintf("**%sremove_jokers**: Remove the red and black Joker cards from the deck.\n", prefix))
+		infoString.WriteString(fmt.Sprintf("**%sreset_cards**: Make a brand new, ordered deck.\n", prefix))
 
 		infoString.WriteString("\n__**Games**__\n")
-		infoString.WriteString(fmt.Sprintf("**%shigh_or_low**: Start a game of High or Low.\n", prefix))
 		infoString.WriteString(fmt.Sprintf("**%squitgame**: Stop the currently running game.\n", prefix))
 		message := &discordgo.MessageEmbed{
 			Color:       0x607d8b,
@@ -253,72 +231,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			Description: infoString.String(),
 		}
 		s.ChannelMessageSendEmbed(m.ChannelID, message)
-	}
-
-	if command == "set_style_normal" {
-		state := GetServerState(m.GuildID)
-		state.cardsStyle = KenneyLarge
-		s.ChannelMessageSend(m.ChannelID, "Changed cards to normal style.")
-	}
-	if command == "set_style_pixel" {
-		state := GetServerState(m.GuildID)
-		state.cardsStyle = KenneyPixel
-		s.ChannelMessageSend(m.ChannelID, "Changed cards to pixel art style.")
-	}
-
-	if command == "include_jokers" {
-		state := GetServerState(m.GuildID)
-		if state.GameType() != NoGame {
-			s.ChannelMessageSend(m.ChannelID, gameInProgressWarning())
-			return
-		}
-		if state.includeJokers {
-			s.ChannelMessageSend(m.ChannelID, "There are already Joker cards in the deck.")
-			return
-		}
-
-		state.includeJokers = true
-		state.deck = playingcards.NewDeck(state.includeJokers)
-		s.ChannelMessageSend(m.ChannelID, "Added Joker cards and reset the deck.")
-	}
-	if command == "remove_jokers" {
-		state := GetServerState(m.GuildID)
-		if state.GameType() != NoGame {
-			s.ChannelMessageSend(m.ChannelID, gameInProgressWarning())
-			return
-		}
-		if !state.includeJokers {
-			s.ChannelMessageSend(m.ChannelID, "There are no Joker cards in the deck.")
-			return
-		}
-
-		state.includeJokers = false
-		state.deck = playingcards.NewDeck(state.includeJokers)
-		s.ChannelMessageSend(m.ChannelID, "Removed Joker cards and reset the deck.")
-	}
-
-	if command == "high_or_low" {
-		state := GetServerState(m.GuildID)
-		if state.GameType() != NoGame {
-			s.ChannelMessageSend(m.ChannelID, gameInProgressWarning())
-			return
-		}
-		message := &discordgo.MessageEmbed{
-			Color:       0x3dbb6b,
-			Title:       "High or Low",
-			Description: "Guess whether the next card will be higher or lower.\nReact with 🎲 to join.\nOnly your first reaction in each round will be counted, so choose carefully!",
-			Footer: &discordgo.MessageEmbedFooter{
-				Text: "Game starting in 7 seconds...",
-			},
-		}
-		messageObj, err := s.ChannelMessageSendEmbed(m.ChannelID, message)
-		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, "Error when trying to start the game.")
-			return
-		}
-		s.MessageReactionAdd(m.ChannelID, messageObj.ID, "\xf0\x9f\x8e\xb2")
-		state.game.lastMessageID = messageObj.ID
-		go HighOrLowGame(state, s, m.ChannelID)
 	}
 
 	if command == "draw" {
@@ -332,7 +244,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if strings.Contains(cardDrawn.String(), "Invalid") {
 			s.ChannelMessageSend(m.ChannelID, "No more cards left!")
 		} else {
-			cardURL := GetCardURL(cardDrawn, state.cardsStyle)
+			cardURL := GetCardURL(cardDrawn)
 			message := &discordgo.MessageEmbed{
 				Color: 0x7fb2f0,
 				Title: cardDrawn.String(),
@@ -346,6 +258,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSendEmbed(m.ChannelID, message)
 		}
 	}
+
 	if command == "shuffle" {
 		state := GetServerState(m.GuildID)
 		if state.GameType() != NoGame {
@@ -356,6 +269,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		state.deck.Shuffle()
 		s.ChannelMessageSend(m.ChannelID, "Cards shuffled!")
 	}
+
 	if command == "reset_cards" {
 		state := GetServerState(m.GuildID)
 		if state.GameType() != NoGame {
@@ -363,9 +277,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 
-		state.deck = playingcards.NewDeck(state.includeJokers)
+		state.deck = playingcards.NewDeck()
 		s.ChannelMessageSend(m.ChannelID, "Cards have been reset.")
 	}
+
 	if command == "quitgame" {
 		state := GetServerState(m.GuildID)
 		if state.GameType() == NoGame {
@@ -374,7 +289,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		state.game.gameType = NoGame
-		state.deck = playingcards.NewDeck(state.includeJokers)
+		state.deck = playingcards.NewDeck()
 		s.ChannelMessageSend(m.ChannelID, "Stopped the game.")
 	}
 }
@@ -430,7 +345,7 @@ func messageReactionAdd(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
 // HighOrLowGame starts a new game of High or Low for the given Discord server in the channel the bot responded to.
 func HighOrLowGame(state *ServerState, s *discordgo.Session, channelID string) {
 	state.game.gameType = HighOrLow
-	state.deck = playingcards.NewDeck(false) // High or Low does not use Joker cards
+	state.deck = playingcards.NewDeck() // High or Low does not use Joker cards
 	state.deck.Shuffle()
 	state.game.channelID = channelID
 	state.game.preStartPhase = true
@@ -459,7 +374,7 @@ func HighOrLowGame(state *ServerState, s *discordgo.Session, channelID string) {
 			return
 		}
 		// Show the current card, add up/down reactions, then wait 5 seconds
-		cardURL := GetCardURL(cardDrawn, state.cardsStyle)
+		cardURL := GetCardURL(cardDrawn)
 		message := &discordgo.MessageEmbed{
 			Color: 0x3dbb6b,
 			Title: cardDrawn.String(),
@@ -561,7 +476,7 @@ func HighOrLowGame(state *ServerState, s *discordgo.Session, channelID string) {
 	}
 
 	// Print the last card of the game
-	cardURL := GetCardURL(cardDrawn, state.cardsStyle)
+	cardURL := GetCardURL(cardDrawn)
 	message := &discordgo.MessageEmbed{
 		Color: 0x3dbb6b,
 		Title: fmt.Sprintf("Last card drawn: %s", cardDrawn.String()),
@@ -601,5 +516,5 @@ func resetState(state *ServerState) {
 	state.game.channelID = ""
 	state.game.lastMessageID = ""
 	state.players = make(map[string]*PlayerState)
-	state.deck = playingcards.NewDeck(state.includeJokers)
+	state.deck = playingcards.NewDeck()
 }
