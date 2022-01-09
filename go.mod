@@ -1,4 +1,4 @@
-module github.com/svntax/PlayingCardsBot
+module github.com/hitnrun30/PlayingCardsBot
 
 go 1.15
 

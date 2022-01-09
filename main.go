@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/svntax/PlayingCardsBot/playingcards"
-	//"github.com/hitnrun30/PlayingCardsBot/tree/DoMT/playingcards"
+	//"github.com/svntax/PlayingCardsBot/playingcards"
+	"github.com/hitnrun30/PlayingCardsBot/playingcards"
 )
 
 // Bot token can be passed as a command line argument
@@ -223,8 +223,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		infoString.WriteString(fmt.Sprintf("**%sdraw**: Draw a card from the current deck.\n", prefix))
 		infoString.WriteString(fmt.Sprintf("**%sshuffle**: Shuffle the current deck of cards.\n", prefix))
 		infoString.WriteString(fmt.Sprintf("**%sreset_cards**: Make a brand new, ordered deck.\n", prefix))
-
-		infoString.WriteString("\n__**Games**__\n")
 		infoString.WriteString(fmt.Sprintf("**%squitgame**: Stop the currently running game.\n", prefix))
 		message := &discordgo.MessageEmbed{
 			Color:       0x607d8b,
