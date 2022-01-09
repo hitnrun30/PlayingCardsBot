@@ -241,7 +241,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		cardDrawn := state.deck.DrawCard()
 		if strings.Contains(cardDrawn.String(), "Invalid") {
-			s.ChannelMessageSend(m.ChannelID, "No more cards left!")
+			s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("No more cards left! %s", cardDrawn.String()))
 		} else {
 			cardURL := GetCardURL(cardDrawn)
 			message := &discordgo.MessageEmbed{
