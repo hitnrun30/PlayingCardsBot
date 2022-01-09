@@ -244,6 +244,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("No more cards left! %s Value %d", cardDrawn.String(), cardDrawn.Value()))
 		} else {
 			cardURL := GetCardURL(cardDrawn)
+			s.ChannelMessageSend(m.ChannelID, cardURL)
 			message := &discordgo.MessageEmbed{
 				Color: 0x7fb2f0,
 				Title: cardDrawn.String(),
