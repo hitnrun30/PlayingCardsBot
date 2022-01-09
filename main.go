@@ -14,6 +14,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/svntax/PlayingCardsBot/playingcards"
+	//"github.com/hitnrun30/PlayingCardsBot/tree/DoMT/playingcards"
 )
 
 // Bot token can be passed as a command line argument
@@ -169,7 +170,7 @@ func GetCardPath(card playingcards.Card) string {
 	path := ""
 
 	if card.NumberAsString() == "Joker" {
-		path = fmt.Sprintf("card_images/cardJoker%s.png", card.Color())
+		path = fmt.Sprintf("card_images/cardJoker%s.jpg", card.Color())
 		return path
 	}
 
@@ -188,7 +189,7 @@ func GetCardPath(card playingcards.Card) string {
 	default:
 		return ""
 	}
-	path = fmt.Sprintf("card_images/card%s%s.png", strings.ToUpper(suit[0:1])+suit[1:], valueString)
+	path = fmt.Sprintf("card_images/card%s%s.jpg", strings.ToUpper(suit[0:1])+suit[1:], valueString)
 
 	return path
 }
@@ -278,6 +279,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		state.deck = playingcards.NewDeck()
+		state.deck.Shuffle()
 		s.ChannelMessageSend(m.ChannelID, "Cards have been reset.")
 	}
 
