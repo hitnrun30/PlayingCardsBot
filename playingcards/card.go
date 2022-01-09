@@ -44,11 +44,11 @@ func (c Card) NumberAsString() string {
 		return "Ace"
 	case 2:
 		return "2"
-	case 11:
+	case 3:
 		return "Jack"
-	case 12:
+	case 4:
 		return "Queen"
-	case 13:
+	case 5:
 		return "King"
 	case -1:
 		return "Joker"
