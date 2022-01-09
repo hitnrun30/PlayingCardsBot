@@ -2,7 +2,6 @@ package playingcards
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -44,7 +43,7 @@ func (c Card) NumberAsString() string {
 	case 1:
 		return "Ace"
 	case 2:
-		return strconv.Itoa(c.number)
+		return "2"
 	case 11:
 		return "Jack"
 	case 12:

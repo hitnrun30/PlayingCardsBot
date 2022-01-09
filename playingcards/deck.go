@@ -12,8 +12,8 @@ type Deck struct {
 	cards []Card
 }
 
-// NewDeckWithJokers creates a new deck of cards with a red and black Joker included
-func NewDeckofMany() Deck {
+// NewDeck creates a new deck of cards
+func NewDeck() Deck {
 	deck := make([]Card, 22)
 	i := 0
 	for suit := CLUBS; suit <= SPADES; suit++ {
@@ -29,11 +29,6 @@ func NewDeckofMany() Deck {
 	blackJoker := NewCard(-1, BLACK_JOKER)
 	deck[i] = blackJoker
 	return Deck{cards: deck}
-}
-
-// NewDeck creates a new deck of cards
-func NewDeck() Deck {
-	return NewDeckofMany()
 }
 
 // Size returns the number of cards remaining in this deck
