@@ -87,7 +87,7 @@ const (
 
 var serverStates = make(map[string]*ServerState)
 
-var prefix string = "$domt "
+var prefix string = "$dmt "
 
 // NewServerState creates a new state struct for the given Discord server
 func NewServerState(guildID string) *ServerState {
