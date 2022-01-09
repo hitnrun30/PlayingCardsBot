@@ -200,7 +200,7 @@ func GetCardURL(card playingcards.Card) string {
 	// URL of the server hosting the images
 	hostURL := os.Getenv("HOST_URL_DMT")
 	if len(hostURL) == 0 {
-		hostURL = "https://strausshtpc.ddns.net/audio/DoMT" //"http://localhost:8080"
+		hostURL = "http://localhost:8080"
 	}
 	cardURL := fmt.Sprintf("%s/%s", hostURL, cardPath)
 	return cardURL
