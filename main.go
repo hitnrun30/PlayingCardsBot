@@ -198,7 +198,7 @@ func GetCardPath(card playingcards.Card) string {
 func GetCardURL(card playingcards.Card) string {
 	cardPath := GetCardPath(card)
 	// URL of the server hosting the images
-	hostURL := os.Getenv("HOST_URL")
+	hostURL := os.Getenv("HOST_URL_DMT")
 	if len(hostURL) == 0 {
 		hostURL = "http://localhost:8080"
 	}
